@@ -61,4 +61,3 @@ import json
 json_obj = json.loads(content)
 print(json_obj)
 
-{}
