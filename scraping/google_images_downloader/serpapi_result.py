@@ -3,10 +3,12 @@ import os, urllib.request, json
 from requests import request # json for pretty output
 from serpapi import GoogleSearch
 from timeit import default_timer as timer
+import eventlet
+import pandas as pd
 
 start = timer()
 
-os.environ["API_KEY"] = "0ffc61a619905fad4568c79bd42e0d90acb9a030f9cc012a29e70dcf91a5a014"
+os.environ["API_KEY"] = "8e9269d18e57befb76a74e3e5a13a693b173f7efb8d7b5d71310074c4a864700"
 
 
 # Downloading images
@@ -19,13 +21,12 @@ def download_images(results):
         opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.3538.102 Safari/537.36 Edge/18.19582')]
         urllib.request.install_opener(opener)
 
-        urllib.request.urlretrieve(image['original'], f'SerpApi_Images/original_size_img_{index}.jpg')
+        urllib.request.urlretrieve(image['original'], f'SerpApi_Images/original_size_img_{index+1}.jpg') #零變一
 
     end = timer()
     print(end - start)
 
-def download_images_in_list(image_results, search_query):
-
+def create_folder(search_query):
     parent_dir = 'C:/Images_downloaded'
     new_dir = '{}'.format(search_query)
     path = os.path.join(parent_dir, new_dir)
@@ -35,18 +36,26 @@ def download_images_in_list(image_results, search_query):
         print(f'Folder created : {path}')
     else:
         print('Folder already exists!')
+    return path
+    
+
+
+def download_images_in_list(image_results, search_query, path):
     
 
     opener=urllib.request.build_opener()
     opener.addheaders = [('User-Agent' , 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36')]
     urllib.request.install_opener(opener)
 
+    eventlet.monkey_patch()
 
     for i in range (len(image_results)):
         image_url = image_results[i]
         print (f'({i}) -  {image_url}')
         try:
-            urllib.request.urlretrieve(url = image_url, filename = path + '/' + search_query + '__' + str(i) +'.jpg')
+
+            with eventlet.Timeout(20, False):
+                urllib.request.urlretrieve(url = image_url, filename = path + '/' + search_query + '__' + str(i) +'.jpg')
         except:
             continue
 
@@ -60,7 +69,7 @@ def serpapi_get_google_images(search_query):
         "gl": "us",                        # country to search from
         "hl": "en",                        # language
         "tbm": "isch",                     # parameter to display image results
-        "num": "100",                      # number of images per page
+        "num": "1000",                      # number of images per page
         "ijn": 0                           # page number, 0 -> first page, 1 -> second and so on
         # other params under API examples: https://serpapi.com/images-results
     }
@@ -76,6 +85,8 @@ def serpapi_get_google_images(search_query):
         
         # JSON -> Python dict (actual data is here)
         results = search.get_dict()
+
+        
     
         # checks for "Google hasn't returned any results for this query."
         if "error" not in results:
@@ -98,7 +109,36 @@ def serpapi_get_google_images(search_query):
     print(len(image_results))
     print(type(image_results)) # List of image urls
 
-    download_images_in_list(image_results, search_query)
+    # save the list to dict and then to csv
+    image_dict = {}
+    dict_value_list = []
+
+    # 把清單中value string變為value list of string (1 list 1 string)
+    for index, value in enumerate(image_results):
+        dict_value = [value] # 每一個str都變成str in list先
+        #新既清單element都放入一個大清單, 方便返pandas做野
+        dict_value_list.append(dict_value)
+
+    # 清單變為dict, 清單index變為key
+    for index, value in enumerate(dict_value_list):
+        string_format_of_index = str(index+1)
+        image_dict[string_format_of_index] = value
+
+    #print (image_dict)
+
+
+
+    # 生産一個folder
+    download_folder_path = create_folder(search_query)
+
+    # 生産image urls 清單, 放到CSV
+    df = pd.DataFrame.from_dict(image_dict).transpose()
+    df.columns =["Images URLs"]
+    df.to_csv('{}/Google_image_search_{}.csv'.format(download_folder_path, search_query))
+        
+
+
+    download_images_in_list(image_results, search_query, download_folder_path)
 
     print(type(results)) # Dict of image urls
     print(results) # Dict of return response in json
