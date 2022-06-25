@@ -31,12 +31,12 @@ headers = {
 
     }
 
-search_query = 'micro usb'.replace (' ','+')
+search_query = 'boxing glove'.replace (' ','+')
 base_url = 'https://www.amazon.ca/s?k={0}'.format(search_query)
 
 items = []
 
-for i in range (1, 3):
+for i in range (1, 11):
     print('Processing {0}...'.format(base_url+'&page={0}'.format(i)))
     
     response = requests.get(base_url+'&page={0}'.format(i), headers = headers)
