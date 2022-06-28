@@ -63,9 +63,11 @@ USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Ge
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'scrapy_dangdang.pipelines.ScrapyDangdangPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    # pipeline可以有很多個, 優先值由1-1000
+   'scrapy_dangdang.pipelines.ScrapyDangdangPipeline': 300,
+   'scrapy_dangdang.pipelines.DangDangDownloadPipeline': 301
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

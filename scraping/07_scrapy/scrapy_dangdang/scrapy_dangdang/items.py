@@ -16,3 +16,6 @@ class ScrapyDangdangItem(scrapy.Item):
     name = scrapy.Field()
     # 價錢
     price = scrapy.Field()
+
+
+
