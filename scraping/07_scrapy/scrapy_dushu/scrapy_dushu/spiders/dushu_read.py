@@ -16,7 +16,7 @@ class DushuReadSpider(CrawlSpider):
         #d是數字, +是多過一個的數字
         Rule(LinkExtractor( allow=r'/book/1188_\d+\.html'), 
                             callback='parse_item', 
-                            follow=True),
+                            follow=True),# follow 如果 True就會一直去到尾
     )
 
     def parse_item(self, response):
